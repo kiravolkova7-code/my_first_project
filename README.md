@@ -3,7 +3,7 @@
 Проект My first project - это приложение для банковских операций клиента.
 
 ## Функционал: 
-На данном этапе приложение имееет ряд функций:
+На данном этапе приложение имеет ряд функций:
 * Маскирует номер банковской карты
 * Маскирует номер банковского счета
 * Принимает строку вида 'Visa Platinum 7000792289606361' или 'Счет 73654108430135874305'
@@ -17,7 +17,7 @@
 Клонируйте приложение из GitHub: 
 
 ```
-git clone https://github.com/kiravolkova7-code/my_first_prodject.git
+git clone https://github.com/kiravolkova7-code/my_first_project.git
 ```
 
 ![плак-плак](https://avatars.mds.yandex.net/get-znatoki/1368855/2a0000016cc0b0686b449e48c82afa1de67b/w1200)
