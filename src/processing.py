@@ -1,9 +1,9 @@
-def filter_by_state(items, state='EXECUTED'):
+def filter_by_state(items, state="EXECUTED"):
     """
     Фильтрует список словарей по значению ключа 'state'.
 
     """
-    return [item for item in items if item.get('state') == state]
+    return [item for item in items if item.get("state") == state]
 
 
 def sort_by_date(data, descending=True):
@@ -16,6 +16,6 @@ def sort_by_date(data, descending=True):
 
     # Используем встроенный метод sort с lambda-функцией в качестве ключа.
     # Сравнение строк в формате 'YYYY-MM-DDTHH:MM:SS...' работает корректно.
-    sorted_data.sort(key=lambda x: x['date'], reverse=descending)
+    sorted_data.sort(key=lambda x: x["date"], reverse=descending)
 
     return sorted_data
