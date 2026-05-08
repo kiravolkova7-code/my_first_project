@@ -1,4 +1,5 @@
-from src.masks import *
+from src.masks import get_mask_account, get_mask_card_number
+
 
 def mask_account_card(input_str: str) -> str:
     """
@@ -45,4 +46,3 @@ def get_date(date_str: str) -> str:
 
     except (IndexError, ValueError):
         raise ValueError("Некорректный формат даты")
-
