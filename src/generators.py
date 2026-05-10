@@ -18,3 +18,16 @@ def transaction_descriptions(transactions):
     for transaction in transactions:
         yield transaction.get('description', '')
 
+
+def card_number_generator(start, end):
+    """
+    Генератор, который выдаёт номера банковских карт в
+    формате XXXX XXXX XXXX XXXX
+    в заданном диапазоне от start до end (включительно)
+    """
+    for number in range(start, end + 1):
+        # Форматируем число в строку из 16 цифр с ведущими нулями
+        card_str = f"{number:016}"
+        # Разбиваем на группы по 4 цифры
+        formatted_card = " ".join([card_str[i:i+4] for i in range(0, 16, 4)])
+        yield formatted_card
