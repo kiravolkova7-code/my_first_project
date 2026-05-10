@@ -2,6 +2,7 @@
 from src.generators import filter_by_currency, transaction_descriptions, card_number_generator
 import pytest
 
+
 def test_filter_usd(transactions):
     usd_transactions = list(filter_by_currency(transactions, "USD"))
     assert len(usd_transactions) == 2
@@ -41,10 +42,12 @@ def test_descriptions_match_transactions(sample_transactions):
         "Перевод с карты на карту",
     ]
 
-def test_empty_list():
+
+def test_empty_list_two():
     # Проверяем, что для пустого списка возвращается пустой список
     descriptions = list(transaction_descriptions([]))
     assert descriptions == []
+
 
 def test_single_transaction():
     # Проверяем работу с одной транзакцией
@@ -60,13 +63,14 @@ def test_single_transaction():
     [
         (1, "0000 0000 0000 0001"),
         (123, "0000 0000 0000 0123"),
-        (123456789, "0000 0001 2345 6789"), # Исправлено: ведущие нули до 16 знаков
+        (123456789, "0000 0001 2345 6789"),
         (9999999999999999, "9999 9999 9999 9999"),
     ],
 )
 def test_single_card_format(number, expected):
     result = list(card_number_generator(number, number))
     assert result == [expected]
+
 
 # Тесты для проверки диапазонов и количества элементов
 @pytest.mark.parametrize(
@@ -83,11 +87,13 @@ def test_card_range(start, end, expected_count, first_expected, last_expected):
     assert result[0] == first_expected
     assert result[-1] == last_expected
 
+
 # Тесты для граничных случаев
 def test_empty_range():
     # Если start > end, диапазон пуст
     result = list(card_number_generator(5, 1))
     assert result == []
+
 
 def test_zero_and_one():
     # Проверка генерации с нуля и единицы

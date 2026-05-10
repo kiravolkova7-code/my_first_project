@@ -12,6 +12,8 @@ def test_items() -> List[Dict[str, Optional[str]]]:
         {"id": "5", "state": None,       "date": "2023-10-05T12:00:00"},
         {"id": "6", "state": "EXECUTED", "date": "2023-10-01T12:00:00"},
     ]
+
+
 # Фикстура с тестовыми транзакциями для теста generators 1
 @pytest.fixture
 def transactions():
@@ -33,6 +35,7 @@ def transactions():
             "operationAmount": {"currency": {"code": "RUB"}},
         },
     ]
+
 
 # Фикстура с тестовыми транзакциями для теста generators 2
 @pytest.fixture
