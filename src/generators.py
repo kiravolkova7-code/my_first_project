@@ -10,3 +10,11 @@ def filter_by_currency(transactions, currency_code):
         if currency.get('code') == currency_code:
             yield transaction
 
+
+def transaction_descriptions(transactions):
+    """
+    Генератор, возвращающий поочерёдно описание каждой транзакции.
+    """
+    for transaction in transactions:
+        yield transaction.get('description', '')
+
