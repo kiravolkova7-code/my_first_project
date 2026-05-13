@@ -1,6 +1,7 @@
 import functools
 import datetime
 
+
 def log(filename=None):
     def decorator(func):
         @functools.wraps(func)
@@ -20,6 +21,7 @@ def log(filename=None):
         return wrapper
     return decorator
 
+
 def _write_log(message, filename):
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_entry = f"[{timestamp}] {message}\n"
@@ -28,5 +30,3 @@ def _write_log(message, filename):
             f.write(log_entry)
     else:
         print(log_entry, end='')
-
-
