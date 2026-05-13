@@ -29,3 +29,4 @@ def _write_log(message, filename):
     else:
         print(log_entry, end='')
 
+
