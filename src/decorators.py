@@ -3,6 +3,15 @@ import datetime
 
 
 def log(filename=None):
+    """
+    Декоратор для логирования выполнения функции.
+    Записывает в лог успешное выполнение функции или информацию о возникшем исключении.
+    Каждое сообщение лога снабжается временной меткой.
+    Args: filename (str, optional): Путь к файлу, в который будут
+    записываться логи.
+    Если аргумент не указан (None), логи выводятся в стандартный поток вывода (stdout).
+    Returns: function: Декоратор, который оборачивает целевую функцию.
+    """
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -23,6 +32,12 @@ def log(filename=None):
 
 
 def _write_log(message, filename):
+    """
+    Записывает сообщение лога в файл или выводит его в стандартный поток вывода.
+    К сообщению добавляется временная метка в формате 'YYYY-MM-DD HH:MM:SS'.
+    Args: message (str): Текст сообщения для лога.
+    filename (str или None): Имя файла для записи. Если None, сообщение выводится в stdout.
+    """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_entry = f"[{timestamp}] {message}\n"
     if filename:
