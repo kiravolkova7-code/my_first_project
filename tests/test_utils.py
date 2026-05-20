@@ -21,7 +21,7 @@ def test_file_not_found(mocker):
     """
     Проверяет, что функция возвращает пустой список, если файл не найден.
     """
-    # Подменяем результат проверки существования файла на False
+
     mocker.patch('os.path.exists', return_value=False)
 
     result = load_operations('missing.json')
