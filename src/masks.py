@@ -4,8 +4,9 @@ import logging
 logging.basicConfig(
     filename='logs/app_masks.log',
     level=logging.INFO,
-    format='%(asctime)s — %(module)s — %(levelname)s — %(message)s',
-    filemode='w'
+    format='%(asctime)s - %(module)s - %(levelname)s - %(message)s',
+    filemode='w',
+    encoding='utf-8'
 )
 
 def get_mask_card_number(card_number: str) -> str:
