@@ -9,6 +9,7 @@ logging.basicConfig(
     encoding='utf-8'
 )
 
+
 def get_mask_card_number(card_number: str) -> str:
     try:
         logging.info(f"Попытка маскировки номера карты: {card_number}")
@@ -24,9 +25,10 @@ def get_mask_card_number(card_number: str) -> str:
         )
         logging.info(f"Номер карты успешно замаскирован: {masked}")
         return masked
-    except Exception as e:
+    except Exception:
         logging.exception("Ошибка при маскировке номера карты")
         raise
+
 
 def get_mask_account(account_number: str) -> str:
     try:
@@ -38,6 +40,6 @@ def get_mask_account(account_number: str) -> str:
         masked = "**" + account_number[-4:]
         logging.info(f"Номер счёта успешно замаскирован: {masked}")
         return masked
-    except Exception as e:
+    except Exception:
         logging.exception("Ошибка при маскировке номера счёта")
         raise
