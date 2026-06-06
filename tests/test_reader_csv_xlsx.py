@@ -1,5 +1,3 @@
-import pytest
-import pandas as pd
 from src.reader_csv_xlsx import read_transactions_csv, read_transactions_excel
 
 
@@ -20,7 +18,7 @@ def test_read_transactions_csv_success(mocker):
     mock_file.assert_called_once_with('any_path.csv', mode='r', encoding='utf-8')
 
 
-#Тесты для Excel-ридера
+# Тесты для Excel-ридера
 def test_read_transactions_excel_success(mocker):
     """
     Проверяет, что функция корректно обрабатывает DataFrame из Excel.
