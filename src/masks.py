@@ -1,34 +1,45 @@
+import logging
+
+# Настройка логгера: файл перезаписывается при каждом запуске
+logging.basicConfig(
+    filename='logs/app_masks.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(module)s - %(levelname)s - %(message)s',
+    filemode='w',
+    encoding='utf-8'
+)
+
+
 def get_mask_card_number(card_number: str) -> str:
-    # Убираем пробелы, если они есть
-    card_number = card_number.replace(" ", "")
-
-    # Проверяем, что номер карты состоит только из цифр и имеет длину 16
-    if len(card_number) != 16:
-        raise ValueError("Номер карты должен содержать ровно 16 цифр")
-
-
-    # Формируем маску: первые 6 цифр, затем две звезды, затем 4 звезды, затем последние 4 цифры
-    masked = (
-        card_number[:4]
-        + " "
-        + card_number[4:6]
-        + "**"
-        + " "
-        + "****"
-        + " "
-        + card_number[-4:]
-    )
-    return masked
+    try:
+        logging.info(f"Попытка маскировки номера карты: {card_number}")
+        card_number = card_number.replace(" ", "")
+        if len(card_number) != 16:
+            logging.error("Неверная длина номера карты (ожидалось 16 цифр)")
+            raise ValueError("Номер карты должен содержать ровно 16 цифр")
+        masked = (
+            card_number[:4] + " " +
+            card_number[4:6] + "**" + " " +
+            "****" + " " +
+            card_number[-4:]
+        )
+        logging.info(f"Номер карты успешно замаскирован: {masked}")
+        return masked
+    except Exception:
+        logging.exception("Ошибка при маскировке номера карты")
+        raise
 
 
 def get_mask_account(account_number: str) -> str:
-    # Убираем пробелы, если они есть
-    account_number = account_number.replace(" ", "")
-
-    # Проверяем, что номер счёта состоит только из цифр и имеет длину не менее 4
-    if not account_number.isdigit() or len(account_number) < 4:
-        raise ValueError("Номер счёта должен содержать минимум 4 цифры")
-
-    # Формируем маску: две звезды и последние 4 цифры
-    masked = "**" + account_number[-4:]
-    return masked
+    try:
+        logging.info(f"Попытка маскировки номера счёта: {account_number}")
+        account_number = account_number.replace(" ", "")
+        if not account_number.isdigit() or len(account_number) < 4:
+            logging.error("Неверный формат или длина номера счёта")
+            raise ValueError("Номер счёта должен содержать минимум 4 цифры")
+        masked = "**" + account_number[-4:]
+        logging.info(f"Номер счёта успешно замаскирован: {masked}")
+        return masked
+    except Exception:
+        logging.exception("Ошибка при маскировке номера счёта")
+        raise
