@@ -93,7 +93,13 @@ def main():
     # 6. Фильтрация по валюте (рубли)
     currency_choice = input("Выводить только рублевые транзакции? Да/Нет: ").strip().lower()
     if currency_choice in ["да", "yes", "y"]:
-        current_list = [t for t in current_list if t.get('currency') == "RUB"]
+        # Получаем вложенный словарь с валютой для каждой транзакции
+        # Если структура нарушена, используем пустой словарь, чтобы избежать ошибок
+        current_list = [
+            t for t in current_list
+            if t.get('operationAmount', {}).get('currency', {}).get('code') == "RUB"
+        ]
+
         # --- ОТЛАДКА: СКОЛЬКО ОСТАЛОСЬ ПОСЛЕ ФИЛЬТРАЦИИ ПО ВАЛЮТЕ? ---
         print(f"[ОТЛАДКА] После фильтрации по валюте 'RUB' осталось: {len(current_list)}")
         # --------------------------------------------------------------
@@ -117,20 +123,41 @@ def main():
         print("\nРаспечатываю итоговый список транзакций...")
         print(f"Всего банковских операций в выборке: {len(current_list)}")
         for t in current_list:
-            # --- УЛУЧШЕННАЯ ОБРАБОТКА ДАТЫ ---
+            # --- УЛУЧШЕННАЯ ОБРАБОТКА ДАТЫ (БЕЗ ВНЕШНИХ БИБЛИОТЕК) ---
             date_value = t.get('date')
             date_str = "Дата не указана"
-            if date_value:
+            if date_value and isinstance(date_value, str):
                 try:
-                    if isinstance(date_value, str):
-                        # Парсинг строки с микросекундами
-                        date_obj = datetime.strptime(date_value, "%Y-%m-%dT%H:%M:%S.%f")
-                    else:
-                        date_obj = date_value
+                    # Создаем копию строки, чтобы не изменять оригинал
+                    date_str_for_parsing = date_value
+
+                    # 1. Удаляем суффикс 'Z' (обозначает UTC), если он есть
+                    if date_str_for_parsing.endswith('Z'):
+                        date_str_for_parsing = date_str_for_parsing[:-1]
+
+                    # 2. Удаляем микросекунды, если они есть
+                    # Находим позицию первой точки
+                    dot_pos = date_str_for_parsing.find('.')
+                    if dot_pos != -1:
+                        # Находим позицию символа 'T' (начало времени)
+                        t_pos = date_str_for_parsing.find('T')
+                        if t_pos != -1 and dot_pos > t_pos:
+                            # Обрезаем строку до первого символа после времени, но до точки
+                            date_str_for_parsing = date_str_for_parsing[:dot_pos]
+
+                    # 3. Парсинг очищенной строки в объект datetime
+                    # Теперь строка гарантированно в формате "%Y-%m-%dT%H:%M:%S"
+                    date_obj = datetime.strptime(date_str_for_parsing, "%Y-%m-%dT%H:%M:%S")
+
+                    # 4. Форматируем дату в нужный вид: 12.04.2019
                     date_str = date_obj.strftime("%d.%m.%Y")
+
                 except (ValueError, TypeError, AttributeError):
+                    # Если что-то пошло не так (не тот формат), оставляем строку по умолчанию
                     pass
-            # ---------------------------------
+
+            # Выводим результат (дату и описание)
+            print(f"\n{date_str} {t.get('description', '')}")
 
             # --- ВЫВОД ИНФОРМАЦИИ О ТРАНЗАКЦИИ ---
             # 1. Описание и дата
