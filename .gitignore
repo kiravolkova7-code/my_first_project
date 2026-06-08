@@ -10,7 +10,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 .flake8
-main.py
+#main.py
 poetry.lock
 pyproject.toml
 __init__.py

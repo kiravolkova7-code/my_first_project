@@ -1,4 +1,5 @@
 import logging
+import re
 
 # Настройка логгера: файл перезаписывается при каждом запуске
 logging.basicConfig(
@@ -43,3 +44,47 @@ def get_mask_account(account_number: str) -> str:
     except Exception:
         logging.exception("Ошибка при маскировке номера счёта")
         raise
+
+
+def mask_requisite(requisite_str):
+    """
+    Определяет тип реквизита (карта или счет) и применяет соответствующую маску.
+    Специально адаптировано для формата: "Счет <номер>" и "Visa ... <номер>".
+    """
+    if not isinstance(requisite_str, str):
+        return requisite_str
+
+    # --- ЛОГИКА ДЛЯ СЧЕТА ---
+    # Проверяем, начинается ли строка с "Счет " (с учетом регистра)
+    if re.match(r'^Счет\s', requisite_str):
+        # Извлекаем только цифры из строки
+        digits = re.sub(r'\D', '', requisite_str)
+        try:
+            # Маскируем только цифры
+            masked_digits = get_mask_account(digits)
+            # Возвращаем строку с исходным префиксом и замаскированным номером
+            return f"Счет {masked_digits}"
+        except (ValueError, TypeError):
+            # Если маскировка не удалась, возвращаем как есть
+            return requisite_str
+
+    # --- УНИВЕРСАЛЬНАЯ ЛОГИКА ДЛЯ КАРТЫ С СОХРАНЕНИЕМ НАЗВАНИЯ ---
+    # Ищем строку, где есть слово, за которым идут не-цифры, а затем 16 цифр.
+    card_match = re.search(r'(\b\w+\b[ \w-]*)\D+(\d{16})', requisite_str, re.IGNORECASE)
+    if card_match:
+        # Группа 1: Название карты (например, "Visa Classic")
+        card_name = card_match.group(1).strip()
+        # Группа 2: Номер карты (16 цифр)
+        card_digits = card_match.group(2)
+
+        try:
+            # Маскируем только цифры
+            masked_digits = get_mask_card_number(card_digits)
+            # Возвращаем строку в формате "<Название> <Замаскированный номер>"
+            return f"{card_name} {masked_digits}"
+        except ValueError:
+            # Если маска не применилась, возвращаем как есть
+            return requisite_str
+
+    # Если тип определить не удалось, возвращаем строку без изменений
+    return requisite_str
