@@ -1,5 +1,3 @@
-import pytest
-from typing import List, Dict, Optional
 from src.processing import filter_by_state, sort_by_date
 
 # Тип для одного элемента в списке, чтобы избежать повторений
