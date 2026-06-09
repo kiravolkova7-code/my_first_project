@@ -1,9 +1,7 @@
-import sys
-import re
 from datetime import datetime
-from src.reader_csv_xlsx import read_transactions_csv, read_transactions_excel
+from src.reader_csv_xlsx import read_transactions_csv, read_transactions_excel, _clean_string
 from src.utils import load_operations
-from src.masks import get_mask_card_number, get_mask_account, mask_requisite
+from src.masks import mask_requisite
 
 
 def main():
@@ -32,6 +30,22 @@ def main():
     # 3. Чтение данных из файла с обработкой ошибок
     try:
         transactions = reader_func(file_path)
+        # ... ваш код ...
+        transactions = reader_func(file_path)
+        # --- НОВАЯ ДИАГНОСТИКА ---
+        print("[ДИАГНОСТИКА] Проверка уникальных значений поля 'state' в данных:")
+        # Соберем все уникальные значения поля 'state' из прочитанных транзакций
+        unique_states = set()
+        for t in transactions:
+            state_value = t.get('state')
+            # Покажем и "сырое" значение, и то, что получится после очистки
+            cleaned_state = _clean_string(state_value) if state_value is not None else '<пусто>'
+            unique_states.add((state_value, cleaned_state))
+
+        for raw, cleaned in unique_states:
+            print(f"  Найдено: '{raw}' -> после _clean_string: '{cleaned}'")
+        # ---------------------------------
+
         if not transactions:
             print("Файл не содержит транзакций или не удалось их прочитать.")
             return
@@ -44,7 +58,7 @@ def main():
         print(f"Произошла ошибка при чтении файла: {e}")
         return
 
-    # 4. Фильтрация по статусу
+    # 4. Фильтрация по статусу (ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ)
     valid_statuses = {"EXECUTED", "CANCELED", "PENDING"}
     while True:
         status_input = input(
@@ -52,16 +66,19 @@ def main():
             "Доступные для фильтровки статусы: EXECUTED, CANCELED, PENDING\n"
             "Ваш выбор: "
         ).strip().upper()
-        if status_input in valid_statuses:
-            # Используем более надежный способ сравнения
-            filtered_by_status = [t for t in transactions if str(t.get('state', '')).strip().upper() == status_input]
 
-            # --- ОТЛАДКА: СКОЛЬКО ТРАНЗАКЦИЙ ПРОШЛО ФИЛЬТРАЦИЮ? ---
+        if status_input in valid_statuses:
+            # --- ИСПРАВЛЕННАЯ ЛОГИКА ФИЛЬТРАЦИИ ---
+            # Используем строгое сравнение после очистки данных
+            filtered_by_status = [
+                t for t in transactions
+                if _clean_string(t.get('state', '')).upper() == status_input
+            ]
+            # -------------------------------------
+
             print(f"[ОТЛАДКА] После фильтрации по статусу '{status_input}' осталось: {len(filtered_by_status)}")
-            # ----------------------------------------------------
 
             if not filtered_by_status:
-                # Если после первой же фильтрации список пуст, выходим
                 print("Не найдено ни одной транзакции, подходящей под ваши условия фильтрации")
                 return
 
@@ -72,7 +89,7 @@ def main():
 
     current_list = filtered_by_status
 
-    # 5. Сортировка по дате
+    # 5. Сортировка по дате (УЛУЧШЕННОЕ ИСПРАВЛЕНИЕ)
     sort_choice = input("Отсортировать операции по дате? Да/Нет: ").strip().lower()
     if sort_choice in ["да", "yes", "y"]:
         order_choice = input(
@@ -80,15 +97,37 @@ def main():
             "(введите 'возрастанию' или 'убыванию'): "
         ).strip().lower()
         reverse_order = order_choice == "убыванию"
+
         try:
-            current_list = sorted(current_list, key=lambda t: t['date'], reverse=reverse_order)
+            # Вся логика парсинга и очистки даты теперь здесь, без дополнительных функций.
+            current_list = sorted(
+                current_list,
+                key=lambda t: (
+                                  # 1. Получаем дату из транзакции. Если ее нет, используем пустую строку.
+                                  date_str := str(t.get('date', '')).strip()
+                              ) and (
+                                  # 2. Создаем копию для парсинга и убираем суффикс 'Z', если он есть.
+                                  (date_str[:-1] if date_str.endswith('Z') else date_str)
+                              ) and (
+                                  # 3. Пытаемся распарсить строку.
+                                  # Если с микросекундами не получается, пробуем без них.
+                                  datetime.strptime(
+                                      (date_str[:-1] if date_str.endswith('Z') else date_str),
+                                      "%Y-%m-%dT%H:%M:%S.%f"
+                                  ) if '.' in ((date_str[:-1] if date_str.endswith('Z') else date_str)) else
+                                  datetime.strptime(
+                                      (date_str[:-1] if date_str.endswith('Z') else date_str),
+                                      "%Y-%m-%dT%H:%M:%S"
+                                  )
+                              ) or datetime.min,
+                # 4. Если что-то пошло не так или дата пустая, используем минимальную дату.
+                reverse=reverse_order
+            )
             order_text = "убыванию" if reverse_order else "возрастанию"
             print(f"Список отсортирован по дате по {order_text}.")
-        except (KeyError, TypeError) as e:
-            # --- ОТЛАДКА: ПОЧЕМУ НЕ СОРТИРУЕТСЯ? ---
-            print(f"[ОТЛАДКА] Ошибка при сортировке (возможно, нет ключа 'date' или неверный формат): {e}")
-            # Мы не прерываем программу, а продолжаем с неотсортированным списком
-            pass
+
+        except Exception as e:
+            print(f"[ОТЛАДКА] Ошибка при сортировке дат: {e}. Возможно, встретился неизвестный формат даты.")
 
     # 6. Фильтрация по валюте (рубли)
     currency_choice = input("Выводить только рублевые транзакции? Да/Нет: ").strip().lower()
@@ -156,9 +195,6 @@ def main():
                     # Если что-то пошло не так (не тот формат), оставляем строку по умолчанию
                     pass
 
-            # Выводим результат (дату и описание)
-            print(f"\n{date_str} {t.get('description', '')}")
-
             # --- ВЫВОД ИНФОРМАЦИИ О ТРАНЗАКЦИИ ---
             # 1. Описание и дата
             description = t.get('description', '')
@@ -175,6 +211,9 @@ def main():
                 masked_to = mask_requisite(to_value)
 
                 print(f"{masked_from} -> {masked_to}")
+            elif to_value:
+                masked_to = mask_requisite(to_value)
+                print(f"{masked_to}")
 
             # 3. Сумма операции (учитываем вложенную структуру operationAmount)
             op_amount = t.get('operationAmount', {})
