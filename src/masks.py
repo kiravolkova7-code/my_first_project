@@ -1,4 +1,5 @@
 import logging
+import re
 
 # Настройка логгера: файл перезаписывается при каждом запуске
 logging.basicConfig(
@@ -43,3 +44,37 @@ def get_mask_account(account_number: str) -> str:
     except Exception:
         logging.exception("Ошибка при маскировке номера счёта")
         raise
+
+
+def mask_requisite(requisite_str):
+    """
+    Определяет тип реквизита (карта или счет) и применяет соответствующую маску.
+    """
+    if not isinstance(requisite_str, str):
+        return requisite_str
+
+    # Проверяем, начинается ли строка с "Счет " (с учетом регистра)
+    if re.match(r'^Счет\s', requisite_str):
+        digits = re.sub(r'\D', '', requisite_str)
+        try:
+            masked_digits = get_mask_account(digits)
+            return f"Счет {masked_digits}"
+        except (ValueError, TypeError):
+            return requisite_str
+
+    # Ищем строку, где есть слово, за которым идут не-цифры, а затем 16 цифр.
+    card_match = re.search(r'(\b\w+\b[ \w-]*)\D+(\d{16})', requisite_str, re.IGNORECASE)
+    if card_match:
+        # Группа 1: Название карты (например, "Visa Classic")
+        card_name = card_match.group(1).strip()
+        # Группа 2: Номер карты (16 цифр)
+        card_digits = card_match.group(2)
+
+        try:
+            masked_digits = get_mask_card_number(card_digits)
+            return f"{card_name} {masked_digits}"
+        except ValueError:
+            return requisite_str
+
+    # Если тип определить не удалось, возвращаем строку без изменений
+    return requisite_str
