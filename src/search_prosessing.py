@@ -1,6 +1,6 @@
 import re
 from typing import List, Dict
-
+from collections import Counter
 
 def process_bank_search(data: List[Dict], search: str) -> List[Dict]:
     """
@@ -16,31 +16,37 @@ def process_bank_search(data: List[Dict], search: str) -> List[Dict]:
 
 def process_bank_operations(data: List[Dict], categories: list) -> dict:
     """
-    Подсчитывает количество банковских операций для каждой заданной категории.
+    Подсчитывает количество банковских операций для каждой заданной категории,
+    используя Counter из collections.
     Категория считается найденной, если её название присутствует как отдельное слово
-    или часть строки
-    в поле 'description' операции. Поиск выполняется без учёта регистра.
+    или часть строки в поле 'description' операции. Поиск выполняется без учёта регистра.
     """
-    if not categories:
+    if not categories or not data:
         return {}
 
-    result = {category: 0 for category in categories}
-
+    # Экранируем спецсимволы в названиях категорий
     escaped_categories = [re.escape(category) for category in categories]
+
+    # Компилируем единый паттерн для поиска всех категорий
     pattern = re.compile("|".join(escaped_categories), re.IGNORECASE)
+
+    counter = Counter()
 
     for operation in data:
         description = operation.get('description')
-        if description is None:
+        if not description:
             continue
 
-        found_categories = pattern.findall(description)
+        # Находим все упоминания ЛЮБЫХ категорий в этом описании
+        found_in_desc = pattern.findall(description)
 
-        # Увеличиваем счётчик для каждой найденной категории
-        for cat in found_categories:
-            for key in result:
-                if key.lower() == cat.lower():
-                    result[key] += 1
-                    break
+        # Используем set() чтобы одна операция засчитывалась только один раз для одной категории
+        # (если слово повторяется в описании несколько раз)
+        unique_found = {word.lower() for word in found_in_desc}
+        counter.update(unique_found)
+
+    # Финальный результат: собираем словарь по исходному списку категорий
+    # .get(cat.lower(), 0) ищет ключ в нижнем регистре, что решает проблему с разным регистром
+    result = {category: counter.get(category.lower(), 0) for category in categories}
 
     return result

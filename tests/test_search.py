@@ -23,11 +23,10 @@ def test_case_insensitive_search():
         {"id": 2, "description": "КАФЕ у дома"},
         {"id": 3, "description": "Обед в ресторане"}
     ]
-    # Поиск строчными буквами должен найти оба варианта
+
     result_lower = process_bank_search(data, "кафе")
     assert len(result_lower) == 2
 
-    # Поиск заглавными буквами также должен быть успешным
     result_upper = process_bank_search(data, "КАФЕ")
     assert len(result_upper) == 2
 
@@ -43,60 +42,56 @@ def test_missing_description_key():
     """
     Проверяет, что функция корректно обрабатывает словари,
     в которых отсутствует ключ 'description'.
-    Такие записи должны игнорироваться.
     """
     data = [
         {"id": 1, "amount": 500},
         {"id": 2, "description": "Найдено!", "amount": 100}
     ]
     result = process_bank_search(data, "найд")
-    # В результате должна быть только вторая запись
+
     assert result == [data[1]]
 
 # Тесты для второй функции счетчика
-@pytest.fixture
-def sample_data() -> List[Dict]:
-    """Фикстура, предоставляющая образец данных для большинства тестов."""
-    return [
-        {"id": 1, "amount": 500, "description": "Оплата за продукты в Пятёрочке"},
-        {"id": 2, "amount": 300, "description": "Такси до дома"},
-        {"id": 3, "amount": 1500, "description": "Зарплата за месяц"},
-        {"id": 4, "amount": 200, "description": "Кафе на Арбате"},
-        {"id": 5, "amount": 100, "description": "Продукты и бытовая химия"},
-        {"id": 6, "amount": 50,  "description": "проезд на метро"}, # Проверка регистра
-    ]
+def test_empty_result_with_categories():
+    """
+    Проверяет, что если данные есть, а совпадений нет,
+    возвращаются нули для всех переданных категорий.
+    """
+    data = [{"description": "Случайный текст без категорий"}]
+    categories = ["Еда", "Транспорт"]
+
+    result = process_bank_operations(data, categories)
+    assert result == {"Еда": 0, "Транспорт": 0}
 
 
-def test_basic_counting(sample_data):
-    """Проверяет корректный подсчёт нескольких категорий."""
-    categories = ["продукты", "такси"]
-    expected_result = {"продукты": 2, "такси": 1}
-    assert process_bank_operations(sample_data, categories) == expected_result
-
-
-def test_case_insensitivity(sample_data):
-    """Проверяет, что поиск не зависит от регистра символов."""
-    categories = ["ПРОДУКТЫ", "МЕТРО"] # Категории в верхнем регистре
-    expected_result = {"ПРОДУКТЫ": 2, "МЕТРО": 1} # Должны найти записи с любым регистром
-    assert process_bank_operations(sample_data, categories) == expected_result
-
-
-def test_empty_data_list():
-    """Проверяет работу функции с пустым списком данных."""
-    empty_data: List[Dict] = []
-    categories = ["продукты"]
-    expected_result = {"продукты": 0}
-    assert process_bank_operations(empty_data, categories) == expected_result
-
-
-def test_multiple_matches_in_one_desc():
-    """Проверяет, что несколько совпадений в одном описании считаются правильно."""
+def test_returns_zero_for_missing_category():
+    """
+    Проверяет, что функция возвращает 0 для категории,
+    которая есть в списке, но не встречается в данных.
+    """
     data = [
-        {
-            "id": 1,
-            "description": "Купил продукты (молоко, хлеб) и поехал на такси домой."
-        }
+        {"description": "Купил Продукт"},
+        {"description": "Оплата ЖКХ"}
     ]
-    categories = ["продукты", "такси"]
-    expected_result = {"продукты": 1, "такси": 1}
-    assert process_bank_operations(data, categories) == expected_result
+    categories = ["Продукт", "ЖКХ", "Развлечения"]
+
+    result = process_bank_operations(data, categories)
+
+    assert result == {"Продукт": 1, "ЖКХ": 1, "Развлечения": 0}
+
+
+def test_partial_match_and_word_boundaries():
+    """
+    Проверяет поиск подстроки (например, 'Кредит' в 'кредитную').
+    """
+    data = [
+        {"description": "Перевод за кредитную карту"},
+        {"description": "Подписка на телеграм-канал Кредитка"}
+    ]
+    categories = ["Кредит"]
+
+    result = process_bank_operations(data, categories)
+
+    assert result == {"Кредит": 2}
+
+

@@ -1,8 +1,9 @@
 from src.processing import filter_by_state, sort_by_date
+from typing import List, Dict, Optional
+import pytest
 
 # Тип для одного элемента в списке, чтобы избежать повторений
 ItemType = Dict[str, Optional[str]]
-
 
 # Для первой функции
 def test_filter_by_state_default(test_items: List[ItemType]) -> None:
